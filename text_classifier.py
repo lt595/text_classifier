@@ -4,11 +4,15 @@ from sklearn.naive_bayes import MultinomialNB
 from sklearn.model_selection import train_test_split
 
 # Load dataset
-X = pd.read_csv("data//train.csv")
-y = pd.read_csv("data//test.csv")
+train_dataset = pd.read_csv("data//train.csv")
+print(train_dataset.columns)
 
-# Split data
-X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
+test_dataset = pd.read_csv("data//test.csv")
+
+X_train = train_dataset['Title'] + train_dataset['Description']
+y_train = train_dataset['Class Index']
+X_test = test_dataset['Title'] + test_dataset['Description']
+y_test = test_dataset['Class Index']
 
 vectorizer = CountVectorizer(stop_words='english', max_features=1000)
 X_train_tf = vectorizer.fit_transform(X_train)
