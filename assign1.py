@@ -9,7 +9,6 @@ from sklearn.preprocessing import LabelEncoder
 import matplotlib.pyplot as plt
 import seaborn as sns
 
-
 import os
 os.environ['TF_ENABLE_ONEDNN_OPTS'] = '0'
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'
@@ -21,6 +20,8 @@ from tensorflow.keras.preprocessing.sequence import pad_sequences
 from tensorflow.keras.models import Sequential
 from tensorflow.keras.layers import Embedding, Conv1D, GlobalMaxPooling1D, GlobalAveragePooling1D, Dense
 from tensorflow.keras.initializers import Constant
+from keras.wrappers.scikit_learn import KerasClassifier
+from sklearn.model_selection import RandomizedSearchCV
 
 
 # Load dataset
@@ -46,11 +47,11 @@ classifier = MultinomialNB()
 classifier.fit(X_train_tf, y_train)
 
 # Accuracy scores
-train_accuracy = classifier.score(X_train_tf, y_train)
-test_accuracy = classifier.score(X_test_tf, y_test)
+train_accuracy_1 = classifier.score(X_train_tf, y_train)
+test_accuracy_1 = classifier.score(X_test_tf, y_test)
 
-print(f"Train Accuracy: {train_accuracy:.2f}")
-print(f"Test Accuracy: {test_accuracy:.2f}")
+print(f"Train Accuracy: {train_accuracy_1:.2f}")
+print(f"Test Accuracy: {test_accuracy_1:.2f}")
 
 
 ## Step 2 - Build a classifier using Term Frequency - IDF
@@ -71,8 +72,8 @@ predictions = classifier.predict(test_x_tfidf)
 
 
 # Evaluate the model
-accuracy = accuracy_score(y_test, predictions)
-print(f"Model Accuracy: {accuracy}")
+test_accuracy_2 = accuracy_score(y_test, predictions)
+print(f"Model Accuracy: {test_accuracy_2}")
 print("\nPer-class Metrics:")
 print(classification_report(y_test, predictions))
 
@@ -121,6 +122,10 @@ history = model_1.fit(
 
 # Create summary of model
 model_1.summary()
+
+# Evaluate model
+loss_3, test_accuracy_3 = model_1.evaluate(test_seq_x_cnn, y_test_cnn)
+print(f"Test Accuracy: {test_accuracy_3:.2f}")
 
 # Plot accuracy curves
 
@@ -198,8 +203,8 @@ model_2.summary()
 history = model_2.fit(train_seq_x_cnn, y_train_cnn, epochs=10, batch_size=32, validation_data=(test_seq_x_cnn, y_test_cnn))
 
 # Evaluate model
-loss, accuracy = model.evaluate(test_seq_x_cnn, y_test_cnn)
-print(f"Test Accuracy: {accuracy:.2f}")
+loss_4, test_accuracy_4 = model_2.evaluate(test_seq_x_cnn, y_test_cnn)
+print(f"Test Accuracy: {test_accuracy_4:.2f}")
 
 # Predictions for confusion matrix
 y_pred = model_2.predict(test_seq_x_cnn)
@@ -216,9 +221,6 @@ plt.show()
 
 
 ### Step 5 - 3rd CNN-based text classifier with pre-processing and hyperparameter tunings
-
-from keras.wrappers.scikit_learn import KerasClassifier
-from sklearn.model_selection import RandomizedSearchCV
 
 # Text preprocessing libraries
 import re
@@ -387,5 +389,20 @@ final_model.summary()
 history = final_model.fit(X_train_cnn_3, y_train_cnn_3, epochs=10, batch_size=32, validation_data=(X_test_cnn_3, y_test_cnn_3))
 
 # Evaluate model
-loss, accuracy = final_model.evaluate(X_test_cnn_3, y_test_cnn_3)
-print(f"Test Accuracy: {accuracy:.2f}")
+loss_5, test_accuracy_5 = final_model.evaluate(X_test_cnn_3, y_test_cnn_3)
+print(f"Test Accuracy: {test_accuracy_5:.2f}")
+
+### Step 6 - Summary of test accuracy for all models from step 1 to 5
+
+# Initialize a dictionary to store test accuracy results
+steps_summary = [
+    "Step 1 - Multinomial Naive Bayes (Term Frequency)",
+    "Step 2 - Multinomial Naive Bayes (TF-IDF)",
+    "Step 3 - CNN with Random Embeddings",
+    "Step 4 - CNN with Pre-trained Embeddings",
+    "Step 5 - CNN with Techniques"
+]
+
+accuracy_score_summary = [test_accuracy_1, test_accuracy_2, test_accuracy_3, test_accuracy_4, test_accuracy_5]
+
+summary_df = pd.DataFrame(accuracy_score_summary, steps_summary).reset_index()
